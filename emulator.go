@@ -70,9 +70,6 @@ func List() ([]AVD, error) {
 		// remove leading and trailing spaces
 		line = strings.Trim(line, " ")
 
-		// at this point, the process we're looking at most certainly belongs to
-		// an android process
-
 		fields := strings.Split(line, " ")
 		pid, err := strconv.Atoi(fields[0])
 		if err != nil {
