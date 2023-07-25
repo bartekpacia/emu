@@ -69,8 +69,9 @@ var runCommand = cli.Command{
 }
 
 var listCommand = cli.Command{
-	Name:  "list",
-	Usage: "list emulators",
+	Name:    "list",
+	Aliases: []string{"ls"},
+	Usage:   "list emulators",
 
 	Flags: []cli.Flag{
 		&cli.StringFlag{

@@ -6,8 +6,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-
-	ps "github.com/keybase/go-ps"
 )
 
 // AVD represents an Android Virtual Device.
@@ -52,19 +50,40 @@ func List() ([]AVD, error) {
 		avds[i] = AVD{Name: avd}
 	}
 
-	processes, err := ps.Processes()
+	cmd = exec.Command(
+		"ps",
+		"-ww", // don't truncate output
+		"-o", "pid=,comm=",
+	)
+	data, err = cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get processes: %v", err)
 	}
 
-	for _, process := range processes {
-		if strings.Contains(process.Executable(), "qemu-system") {
-			avdName := emuInPID(process.Pid())
-			for i, avd := range avds {
-				if avd.Name == avdName {
-					avds[i].Running = true
-					avds[i].Pid = process.Pid()
-				}
+	// parse output of ps
+	lines := strings.Split(string(data), "\n")
+	for _, line := range lines {
+		if !strings.Contains(line, "qemu-system") {
+			continue
+		}
+
+		// remove leading and trailing spaces
+		line = strings.Trim(line, " ")
+
+		// at this point, the process we're looking at most certainly belongs to
+		// an android process
+
+		fields := strings.Split(line, " ")
+		pid, err := strconv.Atoi(fields[0])
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse pid: %v", err)
+		}
+
+		avdName := emuInPID(pid)
+		for i, avd := range avds {
+			if avd.Name == avdName {
+				avds[i].Running = true
+				avds[i].Pid = pid
 			}
 		}
 	}
