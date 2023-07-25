@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -220,38 +221,57 @@ var fontCommand = cli.Command{
 	Subcommands: []*cli.Command{
 		{
 			Name:  "small",
-			Usage: "Sets font scale to 1.85",
+			Usage: "Sets font scale to 0.85",
 			Action: func(c *cli.Context) error {
-				return nil
+				return setFontScale("0.85")
 			},
 		},
 		{
 			Name:  "default",
 			Usage: "Sets font scale to 1.0",
 			Action: func(c *cli.Context) error {
-				return nil
+				return setFontScale("1.0")
 			},
 		},
 		{
 			Name:  "large",
 			Usage: "Sets font scale to 1.15",
 			Action: func(c *cli.Context) error {
-				return nil
+				return setFontScale("1.15")
 			},
 		},
 		{
 			Name:  "largest",
 			Usage: "Sets font scale to 1.30",
 			Action: func(c *cli.Context) error {
-				return nil
+				return setFontScale("1.30")
 			},
 		},
 		{
 			Name:  "reset",
 			Usage: "Resets font scale to the default value",
 			Action: func(c *cli.Context) error {
-				return nil
+				return adbShell("wm", "density", "reset")
 			},
 		},
 	},
+}
+
+func setFontScale(value string) error {
+	return adbShell("settings", "put", "system", "font_scale", value)
+}
+
+func adbShell(cmd ...string) error {
+	args := []string{"shell"}
+	args = append(args, cmd...)
+
+	var stderr bytes.Buffer
+
+	adbCmd := exec.Command("adb", args...)
+	adbCmd.Stderr = &stderr
+	err := adbCmd.Run()
+	if err != nil {
+		return fmt.Errorf("failed to run %s: %v, %v", cmd, err, stderr.String())
+	}
+	return nil
 }
