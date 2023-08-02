@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"syscall"
 
 	emulator "github.com/bartekpacia/emu"
@@ -14,6 +12,8 @@ import (
 
 func main() {
 	log.SetFlags(0)
+	emulator.PrintInvocations = true
+
 	app := &cli.App{
 		Name:                 "emu",
 		Usage:                "Manage android emulators with ease",
@@ -164,53 +164,21 @@ var themeCommand = cli.Command{
 			Name:  "light",
 			Usage: "Enables light theme",
 			Action: func(c *cli.Context) error {
-				cmd := exec.Command("adb", "shell", "cmd", "uimode", "night", "no")
-				err := cmd.Run()
-				if err != nil {
-					return fmt.Errorf("failed to run %s: %v", cmd, err)
-				}
-				return nil
+				return emulator.DisableDarkTheme()
 			},
 		},
 		{
 			Name:  "dark",
 			Usage: "Enables dark theme",
 			Action: func(c *cli.Context) error {
-				cmd := exec.Command("adb", "shell", "cmd", "uimode", "night", "yes")
-				err := cmd.Run()
-				if err != nil {
-					return fmt.Errorf("failed to run %s: %v", cmd, err)
-				}
-				return nil
+				return emulator.EnableDarkTheme()
 			},
 		},
 		{
 			Name:  "toggle",
 			Usage: "Toggles between light and dark theme",
 			Action: func(c *cli.Context) error {
-				cmd := exec.Command("adb", "shell", "cmd", "uimode", "night")
-				out, err := cmd.Output()
-				if err != nil {
-					return fmt.Errorf("failed to run and read stdout: %v", err)
-				}
-				output := string(out)
-
-				targetMode := "yes"
-				if output == "Night mode: yes\n" {
-					targetMode = "no"
-				} else if output == "Night mode: no\n" {
-					targetMode = "yes"
-				} else {
-					return fmt.Errorf("unknown output: %s", output)
-				}
-
-				cmd = exec.Command("adb", "shell", "cmd", "uimode", "night", targetMode)
-				err = cmd.Run()
-				if err != nil {
-					return fmt.Errorf("failed to run %s: %v", cmd, err)
-				}
-
-				return nil
+				return emulator.ToggleDarkTheme()
 			},
 		},
 	},
@@ -225,28 +193,28 @@ var fontsizeCommand = cli.Command{
 			Name:  "small",
 			Usage: "Sets font scale to 0.85",
 			Action: func(c *cli.Context) error {
-				return setFontSize("0.85")
+				return emulator.SetFontSize("0.85")
 			},
 		},
 		{
 			Name:  "default",
 			Usage: "Sets font scale to 1.0",
 			Action: func(c *cli.Context) error {
-				return setFontSize("1.0")
+				return emulator.SetFontSize("1.0")
 			},
 		},
 		{
 			Name:  "large",
 			Usage: "Sets font scale to 1.15",
 			Action: func(c *cli.Context) error {
-				return setFontSize("1.15")
+				return emulator.SetFontSize("1.15")
 			},
 		},
 		{
 			Name:  "largest",
 			Usage: "Sets font scale to 1.30",
 			Action: func(c *cli.Context) error {
-				return setFontSize("1.30")
+				return emulator.SetFontSize("1.30")
 			},
 		},
 	},
@@ -262,7 +230,7 @@ var displaysizeCommand = cli.Command{
 			Name:  "small",
 			Usage: "Sets display size to default * 0.85",
 			Action: func(c *cli.Context) error {
-				return setDisplaySize(0.85)
+				return emulator.SetDisplaySize(0.85)
 			},
 		},
 		{
@@ -270,7 +238,7 @@ var displaysizeCommand = cli.Command{
 			Name:  "default",
 			Usage: "Sets display size to default",
 			Action: func(c *cli.Context) error {
-				return setDisplaySize(1.0)
+				return emulator.SetDisplaySize(1.0)
 			},
 		},
 		{
@@ -278,7 +246,7 @@ var displaysizeCommand = cli.Command{
 			Name:  "large",
 			Usage: "Sets display size to default * 1.1625",
 			Action: func(c *cli.Context) error {
-				return setDisplaySize(1.1625)
+				return emulator.SetDisplaySize(1.1625)
 			},
 		},
 		{
@@ -286,7 +254,7 @@ var displaysizeCommand = cli.Command{
 			Name:  "largest",
 			Usage: "Sets display size to default * 1.325",
 			Action: func(c *cli.Context) error {
-				return setDisplaySize(1.325)
+				return emulator.SetDisplaySize(1.325)
 			},
 		},
 		{
@@ -294,54 +262,8 @@ var displaysizeCommand = cli.Command{
 			Name:  "ultra",
 			Usage: "Sets font scale to default * 1.5",
 			Action: func(c *cli.Context) error {
-				return setDisplaySize(1.5)
+				return emulator.SetDisplaySize(1.5)
 			},
 		},
 	},
-}
-
-func setFontSize(value string) error {
-	return adbShell("settings", "put", "system", "font_scale", value)
-}
-
-func getDensity() (int, error) {
-	cmd := exec.Command("adb", "shell", "wm", "density")
-	out, err := cmd.Output()
-	if err != nil {
-		return 0, fmt.Errorf("failed to run: %v", err)
-	}
-	output := string(out)
-
-	var density int
-	_, err = fmt.Sscanf(output, "Physical density: %d", &density)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse density: %v", err)
-	}
-
-	return density, nil
-}
-
-func setDisplaySize(value float32) error {
-	density, err := getDensity()
-	if err != nil {
-		return fmt.Errorf("failed to get density: %v", err)
-	}
-
-	return adbShell("wm", "density", fmt.Sprintf("%d", int(float32(density)*value)))
-}
-
-func adbShell(cmd ...string) error {
-	args := []string{"shell"}
-	args = append(args, cmd...)
-
-	var stderr bytes.Buffer
-
-	adbCmd := exec.Command("adb", args...)
-	log.Println(adbCmd.String())
-	adbCmd.Stderr = &stderr
-	err := adbCmd.Run()
-	if err != nil {
-		return fmt.Errorf("failed to run %s: %v, %v", cmd, err, stderr.String())
-	}
-	return nil
 }

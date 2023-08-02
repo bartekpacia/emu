@@ -2,11 +2,15 @@
 package emulator
 
 import (
+	"bytes"
 	"fmt"
+	"log"
 	"os/exec"
 	"strconv"
 	"strings"
 )
+
+var PrintInvocations bool
 
 // AVD represents an Android Virtual Device.
 //
@@ -103,6 +107,7 @@ func Start(name string) error {
 
 			args := []string{fmt.Sprintf("@%s", name), "-no-boot-anim", "-no-audio"}
 			cmd := exec.Command("emulator", args...)
+			printInvocation(cmd)
 			err = cmd.Start()
 			if err != nil {
 				return fmt.Errorf("start avd %s: %v", name, err)
@@ -113,6 +118,62 @@ func Start(name string) error {
 	}
 
 	return fmt.Errorf("avd %s not found", name)
+}
+
+func EnableDarkTheme() error {
+	return adbShell("cmd", "uimode", "night", "yes")
+}
+
+func DisableDarkTheme() error {
+	return adbShell("cmd", "uimode", "night", "no")
+}
+
+func ToggleDarkTheme() error {
+	cmd := exec.Command("adb", "shell", "cmd", "uimode", "night")
+	printInvocation(cmd)
+	out, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to run and read stdout: %v", err)
+	}
+	output := string(out)
+
+	targetMode := "yes"
+	if output == "Night mode: yes\n" {
+		targetMode = "no"
+	}
+
+	return adbShell("cmd", "uimode", "night", targetMode)
+}
+
+func SetFontSize(value string) error {
+	return adbShell("settings", "put", "system", "font_scale", value)
+}
+
+func SetDisplaySize(value float32) error {
+	density, err := getDensity()
+	if err != nil {
+		return fmt.Errorf("failed to get density: %v", err)
+	}
+
+	return adbShell("wm", "density", fmt.Sprintf("%d", int(float32(density)*value)))
+}
+
+func getDensity() (int, error) {
+	cmd := exec.Command("adb", "shell", "wm", "density")
+	printInvocation(cmd)
+	out, err := cmd.Output()
+	if err != nil {
+		return 0, fmt.Errorf("failed to run: %v", err)
+	}
+	output := string(out)
+
+	var density int
+	_, err = fmt.Sscanf(output, "Physical density: %d", &density)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse density: %v", err)
+	}
+
+	return density, nil
 }
 
 // emuInPID returns the name of the AVD that is running in process.
@@ -138,4 +199,26 @@ func emuInPID(pid int) string {
 	}
 
 	return ""
+}
+
+func adbShell(cmd ...string) error {
+	args := []string{"shell"}
+	args = append(args, cmd...)
+
+	var stderr bytes.Buffer
+
+	adbCmd := exec.Command("adb", args...)
+	printInvocation(adbCmd)
+	adbCmd.Stderr = &stderr
+	err := adbCmd.Run()
+	if err != nil {
+		return fmt.Errorf("failed to run %s: %v, %v", cmd, err, stderr.String())
+	}
+	return nil
+}
+
+func printInvocation(cmd *exec.Cmd) {
+	if PrintInvocations {
+		log.Println(cmd.String())
+	}
 }
