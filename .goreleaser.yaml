@@ -11,7 +11,7 @@ builds:
 
 archives:
   - id: emu
-    name_template: 'emu_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    name_template: "emu_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     builds:
       - emu
     files:
