@@ -51,7 +51,7 @@ aurs:
     description: Handy mini-CLI for more pleasant work with Android Emulator
     maintainers:
       - Bartek Pacia <barpac02@gmail.com>
-    private_key: "{{ .Env.AUR_SSH_KEY }}"
+    private_key: "{{ .Env.AUR_SSH_PRIVATE_KEY }}"
     git_url: git@github.com:bartekpacia/aur.git
     directory: emu-bin
     package: |
