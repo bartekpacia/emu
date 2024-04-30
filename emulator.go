@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -45,6 +46,13 @@ func List() ([]AVD, error) {
 	for i := len(avdsStr) - 1; i >= 0; i-- {
 		if avdsStr[i] == "" {
 			avdsStr = append(avdsStr[:i], avdsStr[i+1:]...)
+		}
+	}
+
+	// Workaround for a bug in emulator v34
+	for i, avd := range avdsStr {
+		if strings.Contains(avd, "Storing crashdata") {
+			avdsStr = slices.Delete(avdsStr, i, i+1)
 		}
 	}
 
