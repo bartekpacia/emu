@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Macs have bash3 for which the bash-completion package doesn't include
 # _init_completion. This is a minimal version of that function.
 __emu_init_completion() {
