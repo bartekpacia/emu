@@ -64,6 +64,7 @@ func List() ([]AVD, error) {
 
 	cmd = exec.Command(
 		"ps",
+		"-e",
 		"-ww", // don't truncate output
 		"-o", "pid=,comm=",
 	)
@@ -190,6 +191,7 @@ func getDensity() (int, error) {
 func emuInPID(pid int) string {
 	cmd := exec.Command(
 		"ps",
+		"-e",
 		"-ww", // don't truncate output
 		"-o", "args=",
 		"-p", strconv.Itoa(pid),
