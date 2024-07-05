@@ -7,9 +7,21 @@ Windows isn't currently supported.
 
 ## Install
 
-On macOS, just type:
+**macOS**
 
 ```
 brew tap bartekpacia/tools
 brew install emu
 ```
+
+**ArchLinux**
+
+TBD
+
+## Features
+
+- Easily list and run emulators
+- Full shell completion for all commands, flags, and emulator names
+- Change font size and display size
+- Toggle dark mode
+- bonus: doesn't butcher your AirPods sound quality!
