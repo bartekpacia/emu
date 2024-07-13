@@ -11,6 +11,11 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+const (
+	categoryManage  = "Manage AVDs"
+	categoryControl = "Control a running AVD"
+)
+
 func main() {
 	log.SetFlags(0)
 	emulator.PrintInvocations = true
@@ -21,13 +26,15 @@ func main() {
 		EnableShellCompletion: true,
 		HideHelpCommand:       true,
 		Commands: []*cli.Command{
-			&runCommand,
-			&listCommand,
-			&killCommand,
+			// control
 			&themeCommand,
 			&fontsizeCommand,
 			&displaysizeCommand,
 			&animationsCommand,
+			// manage
+			&runCommand,
+			&listCommand,
+			&killCommand,
 		},
 		CommandNotFound: func(ctx context.Context, c *cli.Command, command string) {
 			log.Printf("invalid command '%s'. See 'emu --help'\n", command)
@@ -44,6 +51,7 @@ var runCommand = cli.Command{
 	Name:      "run",
 	Usage:     "Boot AVD",
 	ArgsUsage: "<avd>",
+	Category:  categoryManage,
 	Action: func(ctx context.Context, c *cli.Command) error {
 		avd := c.Args().First()
 		if avd == "" {
@@ -74,24 +82,11 @@ var runCommand = cli.Command{
 }
 
 var listCommand = cli.Command{
-	Name:    "list",
-	Aliases: []string{"ls"},
-	Usage:   "List all AVDs",
-
-	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:    "region-id",
-			Aliases: []string{"id"},
-			Value:   "",
-			Usage:   "region whose generated directory will be compressed",
-		},
-		&cli.BoolFlag{
-			Name:    "verbose",
-			Aliases: []string{"v"},
-			Value:   false,
-			Usage:   "print extensive logs",
-		},
-	},
+	Name:            "list",
+	Aliases:         []string{"ls"},
+	Usage:           "List all AVDs",
+	Category:        categoryManage,
+	HideHelpCommand: true,
 	Action: func(ctx context.Context, c *cli.Command) error {
 		avds, err := emulator.List()
 		if err != nil {
@@ -107,8 +102,9 @@ var listCommand = cli.Command{
 }
 
 var killCommand = cli.Command{
-	Name:  "kill",
-	Usage: "Kill running AVDs",
+	Name:     "kill",
+	Usage:    "Kill running AVDs",
+	Category: categoryManage,
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:    "all",
@@ -159,8 +155,9 @@ var killCommand = cli.Command{
 
 var themeCommand = cli.Command{
 	Name:            "theme",
-	HideHelpCommand: true,
 	Usage:           "Switch between light and dark mode",
+	Category:        categoryControl,
+	HideHelpCommand: true,
 	Commands: []*cli.Command{
 		{
 			Name:  "light",
@@ -189,6 +186,7 @@ var themeCommand = cli.Command{
 var fontsizeCommand = cli.Command{
 	Name:            "fontsize",
 	Usage:           "Make text bigger or smaller",
+	Category:        categoryControl,
 	HideHelpCommand: true,
 	Commands: []*cli.Command{
 		{
@@ -225,6 +223,7 @@ var fontsizeCommand = cli.Command{
 var displaysizeCommand = cli.Command{
 	Name:            "displaysize",
 	Usage:           "Make everything bigger or smaller",
+	Category:        categoryControl,
 	HideHelpCommand: true,
 	Commands: []*cli.Command{
 		{
@@ -273,6 +272,7 @@ var displaysizeCommand = cli.Command{
 var animationsCommand = cli.Command{
 	Name:            "animations",
 	Usage:           "Enable or disable animations",
+	Category:        categoryControl,
 	HideHelpCommand: true,
 	Commands: []*cli.Command{
 		{
