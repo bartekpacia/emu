@@ -142,13 +142,18 @@ func DisableDarkTheme() error {
 }
 
 func ToggleDarkTheme() error {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
 	cmd := exec.Command("adb", "shell", "cmd", "uimode", "night")
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 	printInvocation(cmd)
-	out, err := cmd.Output()
+	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("failed to run and read stdout: %v", err)
+		return fmt.Errorf("failed to run and read stdout: %v: stderr: %v", err, stderr.String())
 	}
-	output := string(out)
+	output := stdout.String()
 
 	targetMode := "yes"
 	if output == "Night mode: yes\n" {
@@ -290,9 +295,9 @@ func useSerial() (string, error) {
 			return "", fmt.Errorf("no devices connected")
 		}
 
-		if len(devices) > 1 {
-			log.Printf("more than one connected, using the first one (%s)\n", devices[0])
-		}
+		// if len(devices) > 1 {
+		// 	log.Printf("More than 1 device connected, using the first one (%s)\n", devices[0])
+		// }
 
 		return devices[0], nil
 	} else {
@@ -314,7 +319,7 @@ func adbShell(cmd ...string) error {
 		return fmt.Errorf("failed to get serial: %v", err)
 	}
 
-	args := []string{"shell", "-s", serial}
+	args := []string{"-s", serial, "shell"}
 	args = append(args, cmd...)
 
 	var stderr bytes.Buffer
@@ -331,7 +336,6 @@ func adbShell(cmd ...string) error {
 
 func adbDevices() ([]string, error) {
 	cmd := exec.Command("adb", "devices")
-	printInvocation(cmd)
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("failed to run and read stdout: %v", err)
