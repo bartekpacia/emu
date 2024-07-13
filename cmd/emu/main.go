@@ -25,6 +25,17 @@ func main() {
 		Usage:                 "Manage android emulators with ease",
 		EnableShellCompletion: true,
 		HideHelpCommand:       true,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "quiet",
+				Aliases: []string{"q"},
+				Usage:   "do not print invocations of subprocesses",
+				Action: func(ctx context.Context, c *cli.Command, value bool) error {
+					emulator.PrintInvocations = !value
+					return nil
+				},
+			},
+		},
 		Commands: []*cli.Command{
 			// control
 			&themeCommand,
@@ -158,6 +169,17 @@ var themeCommand = cli.Command{
 	Usage:           "Switch between light and dark mode",
 	Category:        categoryControl,
 	HideHelpCommand: true,
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:    "serial",
+			Aliases: []string{"s"},
+			Usage:   "use device with given serial",
+			Action: func(ctx context.Context, c *cli.Command, value string) error {
+				emulator.Serial = value
+				return nil
+			},
+		},
+	},
 	Commands: []*cli.Command{
 		{
 			Name:  "light",
