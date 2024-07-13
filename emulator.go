@@ -167,6 +167,66 @@ func SetDisplaySize(value float32) error {
 	return adbShell("wm", "density", fmt.Sprintf("%d", int(float32(density)*value)))
 }
 
+func DisableAnimations() error {
+	var err error
+	err = adbShell("settings", "put", "global", "window_animation_scale", "0")
+	if err != nil {
+		return err
+	}
+	err = adbShell("settings", "put", "global", "transition_animation_scale", "0")
+	if err != nil {
+		return err
+	}
+	err = adbShell("settings", "put", "global", "animator_duration_scale", "0")
+	return err
+}
+
+func EnableAnimations() error {
+	var err error
+	err = adbShell("settings", "put", "global", "window_animation_scale", "1")
+	if err != nil {
+		return err
+	}
+	err = adbShell("settings", "put", "global", "transition_animation_scale", "1")
+	if err != nil {
+		return err
+	}
+	err = adbShell("settings", "put", "global", "animator_duration_scale", "1")
+	return err
+}
+
+func ToggleAnimations() error {
+	// the 3 values are always in sync, so I think it's enough to get just a single one
+	cmd := exec.Command("adb", "shell", "settings", "get", "global", "window_animation_scale")
+	printInvocation(cmd)
+	out, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to run and read stdout: %v", err)
+	}
+	output := string(out)
+
+	// basic validation
+	if output != "0\n" && output != "1\n" {
+		return fmt.Errorf("unexpected output: %s", output)
+	}
+
+	targetScale := "1"
+	if output == "1\n" {
+		targetScale = "0"
+	}
+
+	err = adbShell("settings", "put", "global", "window_animation_scale", targetScale)
+	if err != nil {
+		return err
+	}
+	err = adbShell("settings", "put", "global", "transition_animation_scale", targetScale)
+	if err != nil {
+		return err
+	}
+	err = adbShell("settings", "put", "global", "animator_duration_scale", targetScale)
+	return err
+}
+
 func getDensity() (int, error) {
 	cmd := exec.Command("adb", "shell", "wm", "density")
 	printInvocation(cmd)

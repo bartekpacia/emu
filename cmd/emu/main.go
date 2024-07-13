@@ -27,6 +27,7 @@ func main() {
 			&themeCommand,
 			&fontsizeCommand,
 			&displaysizeCommand,
+			&animationsCommand,
 		},
 		CommandNotFound: func(ctx context.Context, c *cli.Command, command string) {
 			log.Printf("invalid command '%s'. See 'emu --help'\n", command)
@@ -264,6 +265,35 @@ var displaysizeCommand = cli.Command{
 			Usage: "Sets font scale to default * 1.5",
 			Action: func(ctx context.Context, c *cli.Command) error {
 				return emulator.SetDisplaySize(1.5)
+			},
+		},
+	},
+}
+
+var animationsCommand = cli.Command{
+	Name:            "animations",
+	Usage:           "Enable or disable animations",
+	HideHelpCommand: true,
+	Commands: []*cli.Command{
+		{
+			Name:  "off",
+			Usage: "Disables animations",
+			Action: func(ctx context.Context, c *cli.Command) error {
+				return emulator.DisableAnimations()
+			},
+		},
+		{
+			Name:  "on",
+			Usage: "Enables animation",
+			Action: func(ctx context.Context, c *cli.Command) error {
+				return emulator.EnableAnimations()
+			},
+		},
+		{
+			Name:  "toggle",
+			Usage: "Toggles between light and dark theme",
+			Action: func(ctx context.Context, c *cli.Command) error {
+				return emulator.ToggleAnimations()
 			},
 		},
 	},
