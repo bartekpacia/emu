@@ -141,7 +141,10 @@ var killCommand = cli.Command{
 					return fmt.Errorf("avd '%s' is not running", avdName)
 				}
 
-				syscall.Kill(avd.Pid, syscall.SIGKILL)
+				err := syscall.Kill(avd.Pid, syscall.SIGKILL)
+				if err != nil {
+					return fmt.Errorf("failed to kill avd %#v: %v", avdName, err)
+				}
 				return nil
 			}
 		}
