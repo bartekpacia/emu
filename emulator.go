@@ -21,11 +21,15 @@ var Serial string
 //
 // It assumes that no 2 instances of the same AVD run at the same time.
 type AVD struct {
+	// Name of the AVD, for example "Pixel_7_API_33".
 	Name    string
 	Running bool
 
 	// PID of the emulator process. Equals 0 if Running is false.
 	Pid int
+
+	// ADB
+	Serial string
 }
 
 func (a AVD) Describe() string {
@@ -38,6 +42,10 @@ func (a AVD) Describe() string {
 }
 
 // List returns a list of available AVDs and whether they're running or not.
+//
+// It merges information from "emulator -list-avds" and "adb devices".
+//
+// If device appears in
 func List() ([]AVD, error) {
 	cmd := exec.Command("emulator", "-list-avds")
 	data, err := cmd.Output()
