@@ -32,4 +32,3 @@ if [[ $(type -t compopt) = "builtin" ]]; then
 else
     complete -o default -o nospace -F __start-emu emu
 fi
-
