@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	altsrc "github.com/urfave/cli-altsrc/v3"
+	docs "github.com/urfave/cli-docs/v3"
 	"log"
 	"os"
 	"syscall"
@@ -51,6 +53,9 @@ func main() {
 			log.Printf("invalid command '%s'. See 'emu --help'\n", command)
 		},
 	}
+
+	_ = altsrc.Err
+	_, _ = docs.ToMarkdown(root)
 
 	err := root.Run(context.Background(), os.Args)
 	if err != nil {
