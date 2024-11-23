@@ -41,7 +41,11 @@ brews:
     description: Handy mini-CLI for more pleasant work with Android Emulator
     license: MIT
     install: |
+      man_content = `./emu docs --format man-with-section`
+      File.write("emu.1", man_content)
+
       bin.install "emu"
+      man1.install "emu.1"
       bash_completion.install "autocomplete/bash_autocomplete" => "emu"
       zsh_completion.install "autocomplete/zsh_autocomplete" => "_emu"
 
