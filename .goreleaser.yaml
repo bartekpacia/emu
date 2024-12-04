@@ -43,8 +43,9 @@ brews:
       File.write("emu.1", man_content)
 
       bin.install "emu"
-      man1.install "emu.1"
       generate_completions_from_executable(bin/"emu", "completion")
+
+      man1.install "emu.1"
 
 aurs:
   - name: emu-bin
