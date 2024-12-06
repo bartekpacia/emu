@@ -17,6 +17,9 @@ const (
 	categoryControl = "Control a running AVD"
 )
 
+// This is set by GoReleaser, see https://goreleaser.com/cookbooks/using-main.version
+var version = "dev"
+
 func main() {
 	log.SetFlags(0)
 	emulator.PrintInvocations = true
@@ -24,6 +27,8 @@ func main() {
 	root := &cli.Command{
 		Name:                  "emu",
 		Usage:                 "Manage android emulators with ease",
+		Authors:               []any{"Bartek Pacia <barpac02@gmail.com>"},
+		Version:               version,
 		EnableShellCompletion: true,
 		HideHelpCommand:       true,
 		Flags: []cli.Flag{
