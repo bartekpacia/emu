@@ -181,15 +181,7 @@ var themeCommand = cli.Command{
 	Category:        categoryControl,
 	HideHelpCommand: true,
 	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:    "serial",
-			Aliases: []string{"s"},
-			Usage:   "use device with given serial",
-			Action: func(ctx context.Context, c *cli.Command, value string) error {
-				emulator.Serial = value
-				return nil
-			},
-		},
+		&serialFlag,
 	},
 	Commands: []*cli.Command{
 		{
@@ -221,6 +213,9 @@ var fontsizeCommand = cli.Command{
 	Usage:           "Make text bigger or smaller",
 	Category:        categoryControl,
 	HideHelpCommand: true,
+	Flags: []cli.Flag{
+		&serialFlag,
+	},
 	Commands: []*cli.Command{
 		{
 			Name:  "small",
@@ -258,6 +253,9 @@ var displaysizeCommand = cli.Command{
 	Usage:           "Make everything bigger or smaller",
 	Category:        categoryControl,
 	HideHelpCommand: true,
+	Flags: []cli.Flag{
+		&serialFlag,
+	},
 	Commands: []*cli.Command{
 		{
 			// e.g. 136
@@ -307,6 +305,9 @@ var animationsCommand = cli.Command{
 	Usage:           "Enable or disable animations",
 	Category:        categoryControl,
 	HideHelpCommand: true,
+	Flags: []cli.Flag{
+		&serialFlag,
+	},
 	Commands: []*cli.Command{
 		{
 			Name:  "off",

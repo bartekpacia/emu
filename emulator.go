@@ -21,11 +21,15 @@ var Serial string
 //
 // It assumes that no 2 instances of the same AVD run at the same time.
 type AVD struct {
+	// Name of the AVD, for example "Pixel_7_API_33".
 	Name    string
 	Running bool
 
 	// PID of the emulator process. Equals 0 if Running is false.
 	Pid int
+
+	// ADB
+	Serial string
 }
 
 func (a AVD) Describe() string {
@@ -38,6 +42,10 @@ func (a AVD) Describe() string {
 }
 
 // List returns a list of available AVDs and whether they're running or not.
+//
+// It merges information from "emulator -list-avds" and "adb devices".
+//
+// If device appears in
 func List() ([]AVD, error) {
 	cmd := exec.Command("emulator", "-list-avds")
 	data, err := cmd.Output()
@@ -142,13 +150,18 @@ func DisableDarkTheme() error {
 }
 
 func ToggleDarkTheme() error {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
 	cmd := exec.Command("adb", "shell", "cmd", "uimode", "night")
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 	printInvocation(cmd)
-	out, err := cmd.Output()
+	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("failed to run and read stdout: %v", err)
+		return fmt.Errorf("failed to run and read stdout: %v: stderr: %v", err, stderr.String())
 	}
-	output := string(out)
+	output := stdout.String()
 
 	targetMode := "yes"
 	if output == "Night mode: yes\n" {
@@ -275,8 +288,46 @@ func emuInPID(pid int) string {
 	return ""
 }
 
+func useSerial() (string, error) {
+	devices, err := adbDevices()
+	if err != nil {
+		return "", fmt.Errorf("failed to get devices: %v", err)
+	}
+
+	if Serial == "" {
+		if err != nil {
+			return "", fmt.Errorf("failed to find default serial: %v", err)
+		}
+
+		if len(devices) == 0 {
+			return "", fmt.Errorf("no devices connected")
+		}
+
+		// if len(devices) > 1 {
+		// 	log.Printf("More than 1 device connected, using the first one (%s)\n", devices[0])
+		// }
+
+		return devices[0], nil
+	} else {
+		for _, device := range devices {
+			if device == Serial {
+				return Serial, nil
+			}
+		}
+
+		return "", fmt.Errorf("serial %s not found in \"adb devices\" output", Serial)
+
+	}
+}
+
+// adbShell runs a command on device using "adb shell".
 func adbShell(cmd ...string) error {
-	args := []string{"shell"}
+	serial, err := useSerial()
+	if err != nil {
+		return fmt.Errorf("failed to get serial: %v", err)
+	}
+
+	args := []string{"-s", serial, "shell"}
 	args = append(args, cmd...)
 
 	var stderr bytes.Buffer
@@ -284,11 +335,35 @@ func adbShell(cmd ...string) error {
 	adbCmd := exec.Command("adb", args...)
 	printInvocation(adbCmd)
 	adbCmd.Stderr = &stderr
-	err := adbCmd.Run()
+	err = adbCmd.Run()
 	if err != nil {
 		return fmt.Errorf("failed to run %s: %v, %v", cmd, err, stderr.String())
 	}
 	return nil
+}
+
+func adbDevices() ([]string, error) {
+	cmd := exec.Command("adb", "devices")
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("failed to run and read stdout: %v", err)
+	}
+	output := string(out)
+
+	lines := strings.Split(output, "\n")
+	devices := make([]string, 0, len(lines))
+	for _, line := range lines {
+		if strings.Contains(line, "List of devices attached") {
+			continue
+		}
+
+		if strings.Contains(line, "device") {
+			fields := strings.Fields(line)
+			devices = append(devices, fields[0])
+		}
+	}
+
+	return devices, nil
 }
 
 func printInvocation(cmd *exec.Cmd) {
