@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"syscall"
 
 	emulator "github.com/bartekpacia/emu"
@@ -13,8 +14,9 @@ import (
 )
 
 const (
-	categoryManage  = "Manage AVDs"
-	categoryControl = "Control a running AVD"
+	categoryManage    = "Manage AVDs"
+	categoryControl   = "Control a running AVD"
+	categoryUtilities = "Auxiliary utilities"
 )
 
 // This is set by GoReleaser, see https://goreleaser.com/cookbooks/using-main.version
@@ -49,10 +51,13 @@ func main() {
 			&displaysizeCommand,
 			&animationsCommand,
 			// manage
-			&runCommand,
+			&createCommand,
 			&listCommand,
+			&runCommand,
 			&killCommand,
+			&removeCommand,
 			// docs
+			&systemImagesCommand,
 			&printDocsCommand,
 		},
 		CommandNotFound: func(ctx context.Context, c *cli.Command, command string) {
@@ -64,6 +69,87 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+var createCommand = cli.Command{
+	Name:     "create",
+	Usage:    "Create a new AVD",
+	Category: categoryManage,
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:     "system-image",
+			Usage:    "Identifier of the system image to flash AVD with. Run 'sdkmanager --list_installed | grep system-images' to see what you have",
+			Required: true,
+			// ShellComplete: SystemImages()
+		},
+		&cli.StringFlag{
+			Name:     "device",
+			Aliases:  []string{"skin"},
+			Usage:    "Name of the device frame to use",
+			Required: true,
+			// ShellComplete: ls $ANDROID_HOME/skins
+		},
+		&cli.IntFlag{
+			Name:  "sdcard",
+			Usage: "Size of SD card",
+			Value: 4096,
+			// ShellComplete: common sizes (4096M, 8192M)
+		},
+	},
+	Action: func(ctx context.Context, c *cli.Command) error {
+		osImage := emulator.SystemImage(c.String("system-image"))
+		device := c.String("device")
+		sdcardSizeMB := int(c.Int("sdcard"))
+
+		arch := "x86_64"
+		if runtime.GOARCH == "arm64" {
+			arch = "arm64-v8a"
+		}
+		_ = arch
+
+		systemImages, err := emulator.SystemImages()
+		if err != nil {
+			return fmt.Errorf("get system images: %w", err)
+		}
+
+		validSystemImage := false
+		for _, systemImage := range systemImages {
+			if osImage == systemImage {
+				validSystemImage = true
+				break
+			}
+		}
+
+		if !validSystemImage {
+			return fmt.Errorf("could not find a OS image '%s'", osImage)
+		}
+
+		skins, err := emulator.Skins()
+		if err != nil {
+			return fmt.Errorf("get skins: %w", err)
+		}
+
+		validSkin := false
+		for _, skin := range skins {
+			if device == skin {
+				validSkin = true
+				break
+			}
+		}
+
+		if !validSkin {
+			return fmt.Errorf("could not find a valid skin '%s'", device)
+		}
+
+		avdName, avdPath, err := emulator.CreateAVD(osImage, device, sdcardSizeMB)
+		if err != nil {
+			return fmt.Errorf("create AVD: %w", err)
+		}
+
+		_, _ = avdName, avdPath
+
+		return nil
+	},
 }
 
 var runCommand = cli.Command{
@@ -172,6 +258,40 @@ var killCommand = cli.Command{
 
 			fmt.Println(avd.Name)
 		}
+	},
+}
+
+var removeCommand = cli.Command{
+	Name:     "remove",
+	Aliases:  []string{"rm"},
+	Usage:    "Delete the Android Virtual Device and all associated data",
+	Category: categoryManage,
+	ShellComplete: func(ctx context.Context, c *cli.Command) {
+		avds, err := emulator.List()
+		if err != nil {
+			return
+		}
+
+		for _, avd := range avds {
+			if avd.Running {
+				continue
+			}
+
+			fmt.Println(avd.Name)
+		}
+	},
+	Action: func(ctx context.Context, c *cli.Command) error {
+		if c.NArg() != 1 {
+			return fmt.Errorf("invalid number of arguments (only 1 expected)")
+		}
+
+		avdName := c.Args().First()
+		err := emulator.DeleteAVD(avdName)
+		if err != nil {
+			return fmt.Errorf("delete AVD '%s': %v", avdName, err)
+		}
+
+		return nil
 	},
 }
 
@@ -332,10 +452,28 @@ var animationsCommand = cli.Command{
 	},
 }
 
+var systemImagesCommand = cli.Command{
+	Name:     "system-images",
+	Usage:    "Print available Android OS images",
+	Category: categoryUtilities,
+	Action: func(ctx context.Context, c *cli.Command) error {
+		systemImages, err := emulator.SystemImages()
+		if err != nil {
+			return fmt.Errorf("failed to list system images: %w", err)
+		}
+
+		for _, systemImage := range systemImages {
+			fmt.Println(systemImage)
+		}
+
+		return nil
+	},
+}
+
 var printDocsCommand = cli.Command{
-	Name:   "docs",
-	Usage:  "Print documentation in various formats",
-	Hidden: true,
+	Name:     "docs",
+	Usage:    "Print documentation in various formats",
+	Category: categoryUtilities,
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:   "format",

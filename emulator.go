@@ -4,7 +4,6 @@ package emulator
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os/exec"
 	"slices"
 	"strconv"
@@ -289,10 +288,4 @@ func adbShell(cmd ...string) error {
 		return fmt.Errorf("failed to run %s: %v, %v", cmd, err, stderr.String())
 	}
 	return nil
-}
-
-func printInvocation(cmd *exec.Cmd) {
-	if PrintInvocations {
-		log.Println(cmd.String())
-	}
 }
