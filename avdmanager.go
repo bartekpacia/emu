@@ -109,8 +109,8 @@ func updateConfig(avdDir string) error {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "hw.keyboard=no") {
 			lines = append(lines, "hw.keyboard=yes")
-		} else if strings.HasPrefix(line, "vm.heapsize=") {
-			lines = append(lines, "vm.heapsize=1024M")
+		} else if strings.HasPrefix(line, "vm.heapSize=") {
+			lines = append(lines, "vm.heapSize=1024M")
 		} else if strings.HasPrefix(line, "hw.ramSize=") {
 			lines = append(lines, "hw.ramSize=4G")
 		} else {
