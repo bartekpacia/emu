@@ -107,6 +107,7 @@ func updateConfig(avdDir string) error {
 	for scanner.Scan() {
 		line := scanner.Text()
 		line = strings.TrimSpace(line)
+		// Values inspired by: https://garden.pacia.tech/managing-avd-from-terminal
 		if strings.HasPrefix(line, "hw.keyboard=no") {
 			lines = append(lines, "hw.keyboard=yes")
 		} else if strings.HasPrefix(line, "vm.heapSize=") {
