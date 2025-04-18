@@ -39,6 +39,7 @@ func (a AVD) Describe() string {
 // List returns a list of available AVDs and whether they're running or not.
 func List() ([]AVD, error) {
 	cmd := exec.Command("emulator", "-list-avds")
+	printInvocation(cmd)
 	data, err := cmd.Output()
 	if err != nil {
 		return nil, err
