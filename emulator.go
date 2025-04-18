@@ -13,12 +13,12 @@ import (
 // PrintInvocations controls whether to print invocations of subprocesses.
 var PrintInvocations bool
 
-// Serial is the serial port of the running AVD, for example "emulator-5554".
+// Serial is the serial port of the running AVD, for example, "emulator-5554".
 var Serial string
 
 // AVD represents an Android Virtual Device.
 //
-// It assumes that no 2 instances of the same AVD run at the same time.
+// It assumes that no two instances of the same AVD run at the same time.
 type AVD struct {
 	Name    string
 	Running bool
