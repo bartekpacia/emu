@@ -14,7 +14,7 @@ builds:
 archives:
   - id: emu
     name_template: "emu_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-    builds:
+    ids:
       - emu
     files:
       - LICENSE
@@ -22,7 +22,7 @@ archives:
     wrap_in_directory: true
     format_overrides:
       - goos: windows
-        format: zip
+        formats: zip
 
 changelog:
   disable: true
