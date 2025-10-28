@@ -11,7 +11,7 @@ Windows isn't currently supported.
 
 ```
 brew tap bartekpacia/tools
-brew install emu
+brew install --cask emu
 ```
 
 **ArchLinux**

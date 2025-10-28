@@ -27,25 +27,26 @@ archives:
 changelog:
   disable: true
 
-brews:
+homebrew_casks:
   - name: emu
     ids:
       - emu
     repository:
       owner: bartekpacia
       name: homebrew-tools
-    directory: Formula
+    directory: Casks
     homepage: https://github.com/bartekpacia/emu
     description: Handy mini-CLI for more pleasant work with Android Emulator
     license: MIT
-    install: |
-      man_content = `./emu docs --format man-with-section`
-      File.write("emu.1", man_content)
-
-      bin.install "emu"
-      generate_completions_from_executable(bin/"emu", "completion")
-
-      man1.install "emu.1"
+    hooks:
+      post:
+        install: |
+          # completions
+          generate_completions_from_executable(bin/"emu", "completion")
+          # manpages
+          man_content = `./emu docs --format man-with-section`
+          File.write("emu.1", man_content)
+          man1.install "emu.1"
 
 aurs:
   - name: emu-bin
