@@ -1,11 +1,11 @@
 module github.com/bartekpacia/emu
 
-go 1.25
+go 1.26
 
 require (
 	github.com/urfave/cli-docs/v3 v3.1.0
-	github.com/urfave/cli/v3 v3.5.0
-	golang.org/x/text v0.30.0
+	github.com/urfave/cli/v3 v3.9.0
+	golang.org/x/text v0.37.0
 )
 
 require (
