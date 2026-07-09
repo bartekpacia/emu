@@ -4,3 +4,5 @@ emu
 
 .idea/*
 !.idea/icon.svg
+
+manpages/
